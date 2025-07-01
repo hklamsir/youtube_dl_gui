@@ -52,7 +52,7 @@ pip install yt-dlp requests pillow
 
 ## 4. 介面說明
 
-![介面說明圖片](docs/youtube_dl_ui_desc.png)
+![介面說明圖片](youtube_dl_ui_desc.png)
 
 1.  **YouTube 網址**:
     * 在此處貼上您想下載的影片、播放列表或頻道的網址。
