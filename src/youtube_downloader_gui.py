@@ -12,6 +12,7 @@ import queue
 import time
 import requests
 import json
+import subprocess
 
 # --- 注意 ---
 # 此腳本需要安裝 yt-dlp, requests 和 Pillow 函式庫
@@ -88,6 +89,9 @@ class YouTubeDownloaderGUI:
         self._load_settings()
         self._create_widgets()
 
+        # --- 新增：啟動時檢查 yt-dlp 更新 ---
+        self._start_yt_dlp_update()
+
         # 檢查 ffmpeg 並啟動佇列監聽
         if self._check_ffmpeg():
             self._log(f"FFmpeg 路徑已設定為: {self.FFMPEG_PATH}")
@@ -95,6 +99,38 @@ class YouTubeDownloaderGUI:
         
         # 新增：為網址變數新增追蹤，以驗證長度
         self.url_var.trace_add("write", self._validate_url_length)
+
+    def _start_yt_dlp_update(self):
+        """在單獨的線程中開始檢查 yt-dlp 的更新。"""
+        self.queue.put({"type": "log", "text": "--- 正在檢查 yt-dlp 更新 ---"})
+        update_thread = threading.Thread(target=self._update_yt_dlp_worker, daemon=True)
+        update_thread.start()
+
+    def _update_yt_dlp_worker(self):
+        """工作函數，用於執行 yt-dlp 的 pip 升級命令。"""
+        try:
+            # 使用 sys.executable 確保我們使用的是正確 Python 環境中的 pip
+            command = [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"]
+            
+            # 執行命令，並將 stdout 和 stderr 一起捕獲
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True, encoding='utf-8')
+            
+            # 將輸出逐行發送到日誌，以提高可讀性
+            for line in result.strip().split('\n'):
+                 self.queue.put({"type": "log", "text": line})
+            self.queue.put({"type": "log", "text": "--- yt-dlp 更新檢查完成 ---"})
+
+        except FileNotFoundError:
+            self.queue.put({"type": "log", "text": "錯誤：找不到 Python/pip 命令。無法自動更新 yt-dlp。"})
+            self.queue.put({"type": "log", "text": "--- yt-dlp 更新檢查失敗 ---"})
+        except subprocess.CalledProcessError as e:
+            self.queue.put({"type": "log", "text": f"yt-dlp 更新失敗，錯誤碼 {e.returncode}:"})
+            for line in e.output.strip().split('\n'):
+                self.queue.put({"type": "log", "text": line})
+            self.queue.put({"type": "log", "text": "--- yt-dlp 更新檢查失敗 ---"})
+        except Exception as e:
+            self.queue.put({"type": "log", "text": f"檢查 yt-dlp 更新時發生未知錯誤: {e}"})
+            self.queue.put({"type": "log", "text": "--- yt-dlp 更新檢查失敗 ---"})
 
     def _validate_url_length(self, *args):
         MAX_URL_LENGTH = 2048 # 設定合理的URL最大長度
