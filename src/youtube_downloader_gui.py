@@ -42,7 +42,7 @@ class YtdlpLogger:
         self.queue.put({"type": "log", "text": f"[yt-dlp 錯誤] {msg}"})
 
 class YouTubeDownloaderGUI:
-    # GUI版本的YouTube下載器，使用 tkinter และ ttk
+    # GUI版本的YouTube下載器，使用 tkinter 和 ttk
     
     def __init__(self, root):
         self.root = root
@@ -85,11 +85,18 @@ class YouTubeDownloaderGUI:
         # 在下載過程中需要禁用的互動式小工具列表
         self.interactive_widgets = []
 
+        # --- 新增修正：處理視窗關閉 ---
+        # 用於儲存排程的 'after' 工作 ID
+        self._after_id = None
+        # 攔截視窗關閉事件
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
+        # --- 修正結束 ---
+
         # 先載入設定，再創建小工具
         self._load_settings()
         self._create_widgets()
 
-        # --- 新增：啟動時檢查 yt-dlp 更新 ---
+        # 啟動時檢查 yt-dlp 更新
         self._start_yt_dlp_update()
 
         # 檢查 ffmpeg 並啟動佇列監聽
@@ -97,7 +104,7 @@ class YouTubeDownloaderGUI:
             self._log(f"FFmpeg 路徑已設定為: {self.FFMPEG_PATH}")
         self._check_queue()
         
-        # 新增：為網址變數新增追蹤，以驗證長度
+        # 為網址變數新增追蹤，以驗證長度
         self.url_var.trace_add("write", self._validate_url_length)
 
     def _start_yt_dlp_update(self):
@@ -294,7 +301,7 @@ class YouTubeDownloaderGUI:
         cancel_btn = ttk.Button(button_frame, text="取消", command=settings_window.destroy)
         cancel_btn.pack(side=tk.LEFT, padx=10)
         
-        # --- 新增：置中視窗 ---
+        # 置中視窗
         self.root.update_idletasks() 
         settings_window.update_idletasks() 
         main_win_x = self.root.winfo_x()
@@ -464,7 +471,6 @@ class YouTubeDownloaderGUI:
         self.log_text = scrolledtext.ScrolledText(log_frame, height=8, width=70)
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # --- 變更 2：設定按鈕樣式並應用 ---
         # 為下載按鈕設定自訂樣式
         style = ttk.Style()
         style.configure("Large.TButton", font=('TkDefaultFont', 12, 'bold'), padding=(20, 10))
@@ -548,7 +554,8 @@ class YouTubeDownloaderGUI:
                     self.subtitle_combo.config(state='readonly')
 
         except queue.Empty: pass
-        self.root.after(100, self._check_queue)
+        # --- 新增修正：儲存 'after' 工作 ID ---
+        self._after_id = self.root.after(100, self._check_queue)
     
     def _simplify_codec(self, codec):
         if not codec or codec == 'none': return 'none'
@@ -842,6 +849,14 @@ class YouTubeDownloaderGUI:
             self.queue.put({"type": "status", "text": "影片資訊載入失敗"})
             self.queue.put({"type": "update_single_video_subtitles", "data": {'無': 'none'}})
 
+    # --- 新增修正：處理視窗關閉的方法 ---
+    def _on_closing(self):
+        """處理視窗關閉事件。"""
+        if self._after_id:
+            self.root.after_cancel(self._after_id)
+        self.root.destroy()
+    # --- 修正結束 ---
+
     def _start_download(self):
         is_playlist = bool(self.channel_videos)
         download_path = self.download_path_var.get()
@@ -916,7 +931,6 @@ class YouTubeDownloaderGUI:
 
             else: # 處理單一影片下載的區塊
                 url = self.url_var.get().strip()
-                # --- 變更 1：獲取標題以用於日誌 ---
                 title = self.video_title_var.get()
                 self.queue.put({"type": "file_progress", "value": 0})
                 self.queue.put({"type": "total_progress", "value": 0})
@@ -933,7 +947,6 @@ class YouTubeDownloaderGUI:
                     self.queue.put({"type": "status", "text": "正在下載音訊..."})
                     self._download_audio(url, subtitle_lang)
                 
-                # --- 變更 1：新增成功日誌訊息 ---
                 self.queue.put({"type": "log", "text": f"--- ✔ 下載成功完成: {title} ---"})
                 self.queue.put({"type": "total_progress", "value": 100})
                 self.queue.put({"type": "success", "text": "下載成功完成"})
