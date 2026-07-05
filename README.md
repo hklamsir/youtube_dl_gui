@@ -120,19 +120,17 @@ youtube_downloader/
 ├── requirements.txt            # Python 依賴聲明
 ├── yd_settings.json            # 使用者設定（JSON，執行時自動產生）
 ├── yd_history.db               # 下載歷史記錄（SQLite，執行時自動產生）
-├── yd_log.txt                  # 執行日誌
+├── yd_log.txt                  # 執行日誌（執行時自動產生）
 ├── app/
-│   ├── __init__.py             # 套件初始化（v2.0.0）
-│   ├── gui.py                  # 使用者介面（tkinter/ttk）
-│   ├── downloader.py           # 下載引擎（yt-dlp 封裝、並行下載）
-│   ├── config.py               # 設定檔管理（JSON 讀寫）
-│   ├── history.py              # 歷史記錄（SQLite CRUD + 統計）
-│   ├── utils.py                # 通用工具（YtdlpLogger、編碼簡化）
-│   ├── setup_checker.py        # 環境依賴檢測（Python/Node.js/FFmpeg）
-│   └── setup_wizard.py         # 引導精靈（逐步安裝 UI）
-├── docs/
-│   └── 使用者初次安裝引導計劃書.md  # 設計文件
-└── youtube_downloader_gui.py   # 舊版單一檔案（保留備份 .bak）
+    ├── __init__.py             # 套件初始化（v2.0.0）
+    ├── gui.py                  # 使用者介面（tkinter/ttk）
+    ├── downloader.py           # 下載引擎（yt-dlp 封裝、並行下載）
+    ├── config.py               # 設定檔管理（JSON 讀寫）
+    ├── history.py              # 歷史記錄（SQLite CRUD + 統計）
+    ├── utils.py                # 通用工具（YtdlpLogger、編碼簡化）
+    ├── setup_checker.py        # 環境依賴檢測（Python/Node.js/FFmpeg）
+    └── setup_wizard.py         # 引導精靈（逐步安裝 UI）
+
 ```
 
 ### 架構設計原則
@@ -170,7 +168,7 @@ youtube_downloader/
     * 設定本次下載任務的儲存位置。程式會自動填入您在「設定」中指定的預設路徑。您可以點擊「瀏覽」臨時更改。
 
 5.  **下載選項**:
-    * **字幕**: 如果影片提供字幕，您可以在此下拉選單中選擇要下載的字幕語言（目前僅篩選英文與中文手動字幕）。
+    * **字幕**: 如果影片提供字幕，您可以在此下拉選單中選擇要下載的字幕語言（目前僅篩選英文與中文字幕）。
     * **下載類型**:
         * **影片 (MP4)**: 下載影像檔。
         * **音訊 (MP3)**: 只下載聲音，並自動轉換為 MP3 格式。
