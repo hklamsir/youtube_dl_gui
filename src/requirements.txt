@@ -1,0 +1,10 @@
+# YouTube Downloader - 核心依賴
+# 安裝方式: pip install -r requirements.txt
+#
+# 另外需要手動安裝 FFmpeg:
+#   下載: https://ffmpeg.org/download.html
+#   並在應用程式設定中指定 ffmpeg.exe 路徑
+
+yt-dlp>=2024.1.1
+Pillow>=10.0.0
+requests>=2.28.0
